@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List
+import typing
 import math
 
 from vuakhter.metrics.base import StatisticsMetrics
 from vuakhter.utils.helpers import get_endpoint, is_valid
 
-if TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from vuakhter.base.requests_log import RequestsLog
     from vuakhter.utils.types import AccessEntry
 
@@ -48,7 +48,7 @@ class ResponseTimeCounter(StatisticsMetrics):
         self.fraction = fraction
 
     @property
-    def description(self):
+    def description(self) -> typing.Any:
         return f'{self.description_prefix} fraction by {self.fraction} ms'
 
     def process_entry(self, entry: AccessEntry) -> None:
@@ -64,9 +64,9 @@ class SchemaValidatorCounter(StatisticsMetrics):
         self.requests_log = requests_log
         self.min_ts = 0
         self.max_ts = 0
-        self.check_ids: List[str] = []
+        self.check_ids: typing.List[str] = []
 
-    def process_buffer(self):
+    def process_buffer(self) -> None:
         if not self.check_ids:
             return
         valid_cnt, invalid_cnt = 0, 0
@@ -102,4 +102,4 @@ class SchemaValidatorCounter(StatisticsMetrics):
         rate = 0.0
         if validated:
             rate = 100.0 * self._statistics['valid'] / validated
-        return f'Valid requests {rate}% ({valid} out of {validated}, {missed} missed)'
+        return f'Valid requests {rate:.2f}% ({valid} out of {validated}, {missed} missed)'

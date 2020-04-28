@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class ElasticAccessLog(ElasticLog, AccessLog):
     def __init__(self, index_pattern: str = 'filebeat-*', *args: Any, **kwargs: Any):
-        super().__init__(index_pattern=index_pattern, *args, **kwargs)
+        super().__init__(index_pattern, *args, **kwargs)
 
     def gen_entries(self, index: str, prefixes: Optional[Sequence[str]] = None) -> Iterator[AccessEntry]:
         if prefixes:

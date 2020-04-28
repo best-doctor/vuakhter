@@ -1,7 +1,6 @@
 from __future__ import annotations
 import datetime
 import os
-from typing import TYPE_CHECKING
 
 from elasticsearch import Elasticsearch
 
@@ -10,18 +9,10 @@ from vuakhter.kibana.access_log import ElasticAccessLog
 from vuakhter.kibana.requests_log import ElasticRequestsLog
 from vuakhter.metrics.counters import SchemaValidatorCounter
 
-if TYPE_CHECKING:
-    from typing import Optional, Dict, List, Sequence
-    from vuakhter.metrics.base import StatisticsMetrics
-    from vuakhter.utils.types import DateOrDatetime
-
-
-
-
 
 def main() -> None:
     import argparse
-    from vuakhter.utils.helpers import setup_logging, timestamp
+    from vuakhter.utils.helpers import setup_logging
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true')

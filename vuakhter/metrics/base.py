@@ -1,25 +1,28 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-
+import typing
 import collections
 
-if TYPE_CHECKING:
-    from typing import Any
+if typing.TYPE_CHECKING:
     from vuakhter.utils.types import AccessEntry
+    StatisticsMapping = typing.Dict[typing.Any, typing.Any]
 
 
 class StatisticsMetrics:
-    description = 'Some metrics'
+    _description = 'Some metrics'
 
     def __init__(self) -> None:
         self.initialize()
 
     @property
-    def statistics(self) -> Any:
+    def description(self) -> str:
+        return self._description
+
+    @property
+    def statistics(self) -> StatisticsMapping:
         return self._statistics
 
     def initialize(self) -> None:
-        self._statistics = collections.defaultdict(int)
+        self._statistics: StatisticsMapping = collections.defaultdict(int)
 
     def finalize(self) -> None:
         pass
@@ -28,11 +31,7 @@ class StatisticsMetrics:
         raise NotImplementedError()
 
     def report(self) -> str:
-        report = list(
-            self.description,
-            '-' * len(self.description),
-        )
-        report.append(f'{self._statistics}')
+        report = [self.description, '-' * len(self.description), f'{self._statistics}']
         for key, value in self._statistics.items():
             report.append(f'{key} {value}')
         return '\n'.join(report)

@@ -9,10 +9,10 @@ from vuakhter.utils.types import RequestEntry
 @pytest.mark.parametrize(
     'date, ms, expected_result',
     [
-      [datetime.date(2020, 4, 1), False, 1585699200],
-      [datetime.date(2020, 4, 1), True, 1585699200000],
-      [datetime.datetime(2020, 4, 1, 12, 12, 12), False, 1585743132],
-      [datetime.datetime(2020, 4, 1, 12, 12, 12), True, 1585743132000],
+        [datetime.date(2020, 4, 1), False, 1585699200],
+        [datetime.date(2020, 4, 1), True, 1585699200000],
+        [datetime.datetime(2020, 4, 1, 12, 12, 12), False, 1585743132],
+        [datetime.datetime(2020, 4, 1, 12, 12, 12), True, 1585743132000],
     ],
 )
 def test_timestamp(date, ms, expected_result):
@@ -65,7 +65,7 @@ def test_get_endpoint(url, expected_result):
         ['level1.level1_1', 1, 1],
         ['level2.level2_2', None, 'abcd'],
         ['level3.level3_1', 'abcd', 'abcd'],
-    ]
+    ],
 )
 def test_deep_get_returns_value(keys, default, expected_result):
     dct = {
@@ -85,7 +85,7 @@ def test_deep_get_returns_value(keys, default, expected_result):
     [
         ['level1.level1_1', None],
         ['level3', 0],
-    ]
+    ],
 )
 def test_deep_get_returns_none(keys, default):
     dct = {
@@ -106,7 +106,7 @@ def test_deep_get_returns_none(keys, default):
         [1, 10, 1, 1],
         [11, 10, 2, 1],
         [99, 49, 3, 1],
-    ]
+    ],
 )
 def test_chunks(length, size, chunks_list_size, last_chunk_size):
     chunk_list = list(chunks(range(1, length + 1), size=size))

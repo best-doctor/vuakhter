@@ -1,17 +1,19 @@
 from __future__ import annotations
 import datetime
 import functools
-from typing import TYPE_CHECKING
+import typing
 import json
 
 from vuakhter.utils.constants import DEFAULT_CHUNK_SIZE, INT_RE, FLOAT_RE, UUID_RE, LOGGING_CONFIG
 
-if TYPE_CHECKING:
-    from typing import Any, Dict, Iterator, Iterable, List, Optional
+if typing.TYPE_CHECKING:
     from vuakhter.utils.types import DateOrDatetime, RequestEntry
 
 
-def chunks(iterable: Iterable[Any], size: int = DEFAULT_CHUNK_SIZE) -> Iterator[List[Any]]:
+def chunks(
+    iterable: typing.Iterable[typing.Any],
+    size: int = DEFAULT_CHUNK_SIZE,
+) -> typing.Iterator[typing.List[typing.Any]]:
     chunk = []
     for el in iterable:
         chunk.append(el)
@@ -22,7 +24,7 @@ def chunks(iterable: Iterable[Any], size: int = DEFAULT_CHUNK_SIZE) -> Iterator[
         yield chunk
 
 
-def deep_get(dictionary: Dict, keys: str, default: Any = None) -> Any:
+def deep_get(dictionary: typing.Dict, keys: str, default: typing.Any = None) -> typing.Any:
     return functools.reduce(
         lambda dct, key: dct.get(key, default) if isinstance(dct, dict) else default,
         keys.split('.'),
@@ -46,11 +48,11 @@ def get_endpoint(url: str) -> str:
 
 
 def timestamp(
-        dt: Optional[DateOrDatetime], epoch: Optional[DateOrDatetime] = None, ms: bool = False,
+        dt: DateOrDatetime, epoch: DateOrDatetime = None, ms: bool = False,
 ) -> int:
     epoch = epoch or type(dt)(1970, 1, 1)
     ms_multiplier = 1000 if ms else 1
-    dt = dt or datetime.utcnow()
+    dt = dt or datetime.datetime.utcnow()
     return int((dt - epoch).total_seconds() * ms_multiplier)
 
 

@@ -1,14 +1,14 @@
 from __future__ import annotations
 import datetime
-from typing import Dict, Union, NamedTuple
+import typing
 
 
-class Boundaries(NamedTuple):
+class Boundaries(typing.NamedTuple):
     min_ts: float
     max_ts: float
 
 
-class AccessEntry(NamedTuple):
+class AccessEntry(typing.NamedTuple):
     ts: int
     url: str
     method: str
@@ -17,13 +17,13 @@ class AccessEntry(NamedTuple):
     response_time: float
 
 
-class RequestEntry(NamedTuple):
+class RequestEntry(typing.NamedTuple):
     ts: int
     json: str
     request_id: str
     status_code: int
 
 
-DateOrDatetime = Union[datetime.date, datetime.datetime]
+DateOrDatetime = typing.Union[datetime.date, datetime.datetime]
 
-IndicesBoundaries = Dict[str, Boundaries]
+IndicesBoundaries = typing.Dict[str, Boundaries]

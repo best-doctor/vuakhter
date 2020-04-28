@@ -1,47 +1,47 @@
 # Vuakhter
 
-Vuakhter создавался для валидации API на соответствие нашему
+Vuakhter is validation tool to test API to conform our
 [API guide](https://github.com/best-doctor/guides/blob/master/guides/api_guide.md).
-Но может использоваться, например, для формирования статистики по логам web-приложения.
+But it can be used to generate statistics of web-application by its logs.
 
-## Принцип работы
+## Principles of work
 
-Vuakhter выбирает из access log указанный период, фильтрует записи по префиксам, передает каждую запись в массив метрик
-для формирования статистики.
+Vuakhter scans access log for specified period, filters log entries by path prefixes
+and passes each entry for statistics generation.
 
-Базовый класс `AccessLog` возвращает итератор по записям лога. Его реализация `ElasticAccessLog` выбирает записи из
-индексов в elastic.
+Base class `AccessLog` returns an iterator of log entries. Class `ElasticAccessLog`
+scans elastic indices for log entries.
 
-`StatisticsMetrics` принимает записи `AccessEntry` и формирует массив статистики. `StatisticsMetrics.report() -> str`
-возвращает отчет по метрике.
+`StatisticsMetrics` gets `AccessEntry` records and forms array of statistics data.
+`StatisticsMetrics.report() -> str` returns statistics report for the metrics.
 
-`HttpAnalyzer` принимает на вход `access_log: AccessLog` и массив `StatisticsMetrics`.
+`HttpAnalyzer` uses `access_log: AccessLog` and array of `StatisticsMetrics`.
 
-В скрипте `vuakhter` в `HttpAnalyzer` добавляется одна метрика - `SchemaValidatorCounter`, которая использует
-`request_log: RequestLog` для валидации ответов API.
+Only one metric `SchemaValidatorCounter` is passing to `HttpAnalyzer` in main script
+`vuakhter`. It uses `request_log: RequestLog` to validate API responses.
 
-`RequestLog` и его реализация `ElasticRequestLog` ищет из индексов elastic запрос по request_id и возвращает набор
-`RequestEntry`, проверяет тело ответа, собирает количество вызовов API, которые удовлетворяют
-[API guide](https://github.com/best-doctor/guides/blob/master/guides/api_guide.md).
+Class `ElasticRequestLog: RequestLog` scans elastic indices requests by request_id
+ and returns array of `RequestEntry`. `SchemaValidatorCounter` checks all responses
+ bodies and counts valid API calls.
 
-## Использование
+## Usage
 
 ```
-vuakhter [--es-user ES_USER] [--es-pass ES_PASS] [--es-host ES_HOST] [--es-port ES_PORT] [--start-date START_DATE] [--end-date END_DATE] prefixes [prefixes ...]
-
+vuakhter [--es-user ES_USER] [--es-pass ES_PASS] [--es-host ES_HOST] [--es-port ES_PORT
+[--start-date START_DATE] [--end-date END_DATE] prefixes [prefixes ...]
 ```
 
-Если end_date не указан, то по умолчанию это текущий
-момент времени. Если не указан start_date, то по умолчанию это момент времени за сутки до end_date.
+By default end_date is current date and time if not specified. And start_date
+defaults to day ago end_date.
 
-Параметры для коннекта к elastic могут быть переданы через env.
+All connection parameters may be specified in .env file.
 
 ```
 ES_USER=elastic ES_PASS=pasword ES_HOST=localhost vuakhter /api/
 
 ```
 
-### Использование в коде
+### Using in code
 
 ```python
 import datetime
