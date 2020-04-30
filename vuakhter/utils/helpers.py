@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import copy
 import datetime
 import functools
 import typing
@@ -62,7 +64,7 @@ def setup_logging(level: str = 'ERROR', formatter: str = 'simple') -> None:
     if formatter in LOGGING_CONFIG['formatters'].keys():
         LOGGING_CONFIG['handlers']['console']['formatter'] = formatter
     LOGGING_CONFIG['root']['level'] = level
-    dictConfig(LOGGING_CONFIG)
+    dictConfig(LOGGING_CONFIG)  # type: ignore
 
 
 def is_valid(entry: RequestEntry) -> bool:

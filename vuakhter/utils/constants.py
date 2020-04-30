@@ -1,5 +1,9 @@
+from __future__ import annotations
+import typing
 import re
 
+if typing.TYPE_CHECKING:
+    from .types import LoggingConfig
 
 INT_RE = re.compile(r'^\d+\Z')
 FLOAT_RE = re.compile(r'^\d+\.\d+\Z')
@@ -7,7 +11,7 @@ UUID_RE = re.compile(r'^[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3
 
 DEFAULT_CHUNK_SIZE = 10
 
-LOGGING_CONFIG = {
+LOGGING_CONFIG: LoggingConfig = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {

@@ -10,13 +10,13 @@ if typing.TYPE_CHECKING:
 
     MetricsIterable = typing.Iterable[StatisticsMetrics]
     MetricsList = typing.List[StatisticsMetrics]
-    PrefixesIterabe = typing.Iterable[str]
+    PrefixesIterable = typing.Iterable[str]
 
 
 class HttpAnalyzer:
     def __init__(
             self, access_log: AccessLog,
-            prefixes: PrefixesIterabe = None,
+            prefixes: PrefixesIterable = None,
             metrics: MetricsIterable = None,
     ) -> None:
         self.access_log = access_log

@@ -1,13 +1,10 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+import typing
 
-if TYPE_CHECKING:
-    from typing import Iterator, Optional, Sequence
+if typing.TYPE_CHECKING:
     from vuakhter.utils.types import RequestEntry
 
 
 class RequestsLog:
-    def get_records(
-        self, start_ts: int, end_ts: int, request_ids: Optional[Sequence[str]] = None,
-    ) -> Iterator[RequestEntry]:
+    def get_records(self, start_ts: int, end_ts: int, **kwargs: typing.Any) -> typing.Iterator[RequestEntry]:
         raise NotImplementedError()
