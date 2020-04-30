@@ -1,11 +1,11 @@
 test:
-	python -m pytest --cov=import_me --cov-report=xml
+	python -m pytest --cov=vuakhter --cov-report=xml
 
 types:
-	mypy .
+	mypy vuakhter
 
 style:
-	flake8 .
+	flake8 vuakhter
 	mdl README.md
 
 check:

@@ -1,6 +1,9 @@
 elasticsearch>=7.0.0,<8.0.0
 elasticsearch-dsl>=7.0.0,<8.0.0
 
+pytest==5.4.1
+pytest-cov==2.8.1
+pydocstyle==3.0.0
 flake8==3.7.9
 flake8-2020==1.6.0
 flake8-annotations-complexity==0.0.1

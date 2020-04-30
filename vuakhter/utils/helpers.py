@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 import datetime
 import functools
 import typing
@@ -61,10 +60,10 @@ def timestamp(
 def setup_logging(level: str = 'ERROR', formatter: str = 'simple') -> None:
     from logging.config import dictConfig
 
-    if formatter in LOGGING_CONFIG['formatters'].keys():
-        LOGGING_CONFIG['handlers']['console']['formatter'] = formatter
-    LOGGING_CONFIG['root']['level'] = level
-    dictConfig(LOGGING_CONFIG)  # type: ignore
+    if formatter in LOGGING_CONFIG['formatters'].keys():  # type: ignore
+        LOGGING_CONFIG['handlers']['console']['formatter'] = formatter  # type: ignore
+    LOGGING_CONFIG['root']['level'] = level  # type: ignore
+    dictConfig(LOGGING_CONFIG)
 
 
 def is_valid(entry: RequestEntry) -> bool:

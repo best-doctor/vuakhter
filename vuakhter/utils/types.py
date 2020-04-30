@@ -27,12 +27,3 @@ class RequestEntry(typing.NamedTuple):
 DateOrDatetime = typing.Union[datetime.date, datetime.datetime]
 
 IndicesBoundaries = typing.Dict[str, Boundaries]
-
-
-class LoggingConfig(typing.TypedDict, total=False):
-    version: int
-    disable_existing_loggers: bool
-    handlers: typing.Dict[str, typing.Dict]
-    formatters: typing.Dict[str, typing.Dict]
-    loggers: typing.Dict[str, typing.Dict]
-    root: typing.Dict
