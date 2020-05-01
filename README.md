@@ -1,5 +1,9 @@
 # Vuakhter
 
+[![Build Status](https://travis-ci.org/best-doctor/vuakhter.svg?branch=master)](https://travis-ci.org/best-doctor/vuakhter)
+[![Maintainability](https://api.codeclimate.com/v1/badges/127bff178b6e355fc24c/maintainability)](https://codeclimate.com/github/best-doctor/vuakhter/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/127bff178b6e355fc24c/test_coverage)](https://codeclimate.com/github/best-doctor/vuakhter/test_coverage)
+
 Vuakhter is validation tool to test API to conform our
 [API guide](https://github.com/best-doctor/guides/blob/master/guides/api_guide.md).
 But it can be used to generate statistics of web-application by its logs.
