@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/best-doctor/vuakhter.svg?branch=master)](https://travis-ci.org/best-doctor/vuakhter)
 [![Maintainability](https://api.codeclimate.com/v1/badges/127bff178b6e355fc24c/maintainability)](https://codeclimate.com/github/best-doctor/vuakhter/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/127bff178b6e355fc24c/test_coverage)](https://codeclimate.com/github/best-doctor/vuakhter/test_coverage)
+[![PyPI version](https://badge.fury.io/py/vuakhter.svg)](https://badge.fury.io/py/vuakhter)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vuakhter)](https://pypi.org/project/vuakhter/)
 
 Vuakhter is validation tool to test API to conform our
 [API guide](https://github.com/best-doctor/guides/blob/master/guides/api_guide.md).
@@ -27,6 +29,12 @@ Only one metric `SchemaValidatorCounter` is passing to `HttpAnalyzer` in main sc
 Class `ElasticRequestLog: RequestLog` scans elastic indices requests by request_id
  and returns array of `RequestEntry`. `SchemaValidatorCounter` checks all responses
  bodies and counts valid API calls.
+
+## Installation
+
+```bash
+pip install vuakhter
+```
 
 ## Usage
 
@@ -72,3 +80,23 @@ for metric in http_analyzer.metrics:
     metric.finalize()
     print(metric.report())
 ```
+
+## Contributing
+
+We would love you to contribute to our project. It's simple:
+
+- Create an issue with bug you found or proposal you have.
+  Wait for approve from maintainer.
+- Create a pull request. Make sure all checks are green.
+- Fix review comments if any.
+- Be awesome.
+
+Here are useful tips:
+
+- You can run all checks and tests with `make check`. Please do it
+  before TravisCI does.
+- We use
+  [BestDoctor python styleguide](https://github.com/best-doctor/guides/blob/master/guides/python_styleguide.md).
+  Sorry, styleguide is available only in Russian for now.
+- We respect [Django CoC](https://www.djangoproject.com/conduct/).
+  Make soft, not bullshit.
