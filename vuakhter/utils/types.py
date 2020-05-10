@@ -27,3 +27,7 @@ class RequestEntry(typing.NamedTuple):
 DateOrDatetime = typing.Union[datetime.date, datetime.datetime]
 
 IndicesBoundaries = typing.Dict[str, Boundaries]
+
+AccessEntryIterator = typing.Iterator[AccessEntry]
+
+RequestEntryIterator = typing.Iterator[RequestEntry]

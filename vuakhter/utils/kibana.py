@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING
+import typing
 import operator
 import logging
 
@@ -12,10 +12,9 @@ from elasticsearch_dsl.query import Query, Q
 from vuakhter.utils.helpers import chunks, deep_get, timestamp
 from vuakhter.utils.types import Boundaries, AccessEntry, RequestEntry
 
-if TYPE_CHECKING:
-    from typing import Iterator, List, Sequence
+if typing.TYPE_CHECKING:
     from elasticsearch import Elasticsearch
-    from vuakhter.utils.types import IndicesBoundaries
+    from vuakhter.utils.types import IndicesBoundaries, AccessEntryIterator, RequestEntryIterator
 
 
 logger = logging.getLogger(__name__)
@@ -33,8 +32,8 @@ def get_timestamp(ts_str: str) -> int:
 
 
 def gen_access_entries(
-        client: Elasticsearch, index: str, prefixes: Sequence[str],
-) -> Iterator[AccessEntry]:
+        client: Elasticsearch, index: str, prefixes: typing.Sequence[str],
+) -> AccessEntryIterator:
     prefix, *tail = prefixes
     query = Q('match_bool_prefix', url__original=prefix)
     for prefix in tail:
@@ -67,8 +66,8 @@ def gen_access_entries(
 
 
 def gen_request_entries(
-        client: Elasticsearch, index: str, request_ids: Sequence[str],
-) -> Iterator[RequestEntry]:
+        client: Elasticsearch, index: str, request_ids: typing.Sequence[str],
+) -> RequestEntryIterator:
     search = Search(using=client, index=index)
     search = (
         search.filter('term', response__type='json_response_log')
@@ -96,7 +95,7 @@ def gen_request_entries(
             pass
 
 
-def get_indices_for_timeslot(indices: IndicesBoundaries, start_ts: int, end_ts: int) -> List[str]:
+def get_indices_for_timeslot(indices: IndicesBoundaries, start_ts: int, end_ts: int) -> typing.List[str]:
     indices_names = []
     for name, boundaries in indices.items():
         if boundaries.max_ts <= start_ts or boundaries.min_ts >= end_ts:
