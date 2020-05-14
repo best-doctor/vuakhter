@@ -1,11 +1,12 @@
 from __future__ import annotations
 import typing
 
+from elasticsearch import Elasticsearch
+
 from vuakhter.utils.helpers import chunks
 from vuakhter.utils.kibana import get_indices_for_timeslot, scan_indices
 
 if typing.TYPE_CHECKING:
-    from elasticsearch import Elasticsearch
     AnyIterator = typing.Iterator[typing.Any]
 
 

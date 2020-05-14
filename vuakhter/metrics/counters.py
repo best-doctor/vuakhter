@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import collections
 import typing
 import math
 
@@ -8,6 +10,7 @@ from vuakhter.utils.helpers import get_endpoint, is_valid
 if typing.TYPE_CHECKING:
     from vuakhter.base.requests_log import RequestsLog
     from vuakhter.utils.types import AccessEntry
+    from vuakhter.metrics.base import StatisticsMapping
 
 
 class MethodCounter(StatisticsMetrics):
@@ -54,6 +57,34 @@ class ResponseTimeCounter(StatisticsMetrics):
     def process_entry(self, entry: AccessEntry) -> None:
         response_time = math.ceil(entry.response_time / self.fraction) * self.fraction
         self._statistics[response_time] += 1
+
+
+class SlowLogCounter(StatisticsMetrics):
+    description = 'Top endpoints response time'
+
+    def __init__(self, top: int = 10, mangle: bool = True) -> None:
+        self.top = top
+        self.mangle = mangle
+
+    def initialize(self) -> None:
+        self._statistics: StatisticsMapping = collections.defaultdict(list)
+
+    def process_entry(self, entry: AccessEntry) -> None:
+        endpoint = get_endpoint(entry.url) if self.mangle else entry.url
+
+        top_list = self._statistics['top']
+
+        top_list.append((endpoint, entry.response_time))
+
+        if len(top_list) > self.top * 100:
+            self._statistics['top'] = sorted(top_list, key=lambda a: a[1], reverse=True)[0:self.top]
+
+    def finalize(self) -> None:
+        top_list = self._statistics['top']
+        self._statistics['top'] = sorted(top_list, key=lambda a: a[1], reverse=True)[0:self.top]
+
+    def report(self) -> str:
+        return '\n'.join((f'{endpoint} {rtime}' for endpoint, rtime in self._statistics['top']))
 
 
 class SchemaValidatorCounter(StatisticsMetrics):

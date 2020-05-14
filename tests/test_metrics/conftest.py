@@ -1,6 +1,7 @@
 import pytest
 
-from vuakhter.metrics.counters import MethodCounter, EndpointCounter, ResponseTimeCounter, ComplexCounter, StatusCounter
+from vuakhter.metrics.counters import MethodCounter, EndpointCounter, ResponseTimeCounter, ComplexCounter, \
+    StatusCounter, SlowLogCounter
 from vuakhter.utils.types import AccessEntry
 
 
@@ -26,8 +27,10 @@ def access_entries_iterator():
 def counter_instance(access_entries_iterator):
     def get_counter_instance(counter_class, **kwargs):
         counter_instance = counter_class(**kwargs)
+        counter_instance.initialize()
         for entry in access_entries_iterator:
             counter_instance.process_entry(entry)
+        counter_instance.finalize()
         return counter_instance
     return get_counter_instance
 
@@ -55,3 +58,10 @@ def complex_counter(counter_instance):
 @pytest.fixture()
 def response_time_counter(counter_instance, fraction=50.0):
     return counter_instance(ResponseTimeCounter, fraction=fraction)
+
+
+@pytest.fixture()
+def slow_log_counter(counter_instance):
+    def get_slow_log_counter(**kwargs):
+        return counter_instance(SlowLogCounter, **kwargs)
+    return get_slow_log_counter

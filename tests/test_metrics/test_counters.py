@@ -1,3 +1,5 @@
+import pytest
+
 
 def test_method_counter(method_counter):
     assert method_counter.statistics == {
@@ -46,3 +48,16 @@ def test_complex_counter(complex_counter):
         ('/endpoint/_INT_/list', 'POST', 400): 1,
         ('/endpoint/_INT_/list/_INT_', 'PUT', 200): 1,
     }
+
+@pytest.mark.parametrize(
+    "top,mangle,expected",
+    (
+        (2, False, [('/endpoint/2', 150.0), ('/endpoint/1/list', 100.0)]),
+        (2, True, [('/endpoint/_INT_', 150.0), ('/endpoint/_INT_/list', 100.0)]),
+    ),
+)
+def test_slow_log_counter_mangle(slow_log_counter, top, mangle, expected):
+    counter = slow_log_counter(top=top, mangle=mangle)
+
+    assert counter.statistics['top'] == expected
+

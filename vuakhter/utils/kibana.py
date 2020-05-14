@@ -31,14 +31,18 @@ def get_timestamp(ts_str: str) -> int:
     )
 
 
-def gen_access_entries(
-        client: Elasticsearch, index: str, prefixes: typing.Sequence[str],
-) -> AccessEntryIterator:
+def get_access_search(client: Elasticsearch, index: str, prefixes: typing.Sequence[str]) -> Search:
     prefix, *tail = prefixes
     query = Q('match_bool_prefix', url__original=prefix)
     for prefix in tail:
         query = query | Q('match_bool_prefix', url__original=prefix)
-    search = Search(using=client, index=index).filter(query)
+    return Search(using=client, index=index).filter(query)
+
+
+def gen_access_entries(
+        client: Elasticsearch, index: str, prefixes: typing.Sequence[str],
+) -> AccessEntryIterator:
+    search = get_access_search(client, index, prefixes)
 
     logger.info('Scan %s with query %s, expect %d results', index, search.to_dict(), search.count())
     for hit in search.scan():
@@ -49,7 +53,7 @@ def gen_access_entries(
                 url=deep_get(hit_dict, 'url.original'),
                 method=deep_get(hit_dict, 'http.request.method'),
                 status_code=int(deep_get(hit_dict, 'http.response.status_code')),
-                response_time=float(deep_get(hit_dict, 'http.response.duration')),
+                response_time=float(deep_get(hit_dict, 'http.response.duration', 0)),
                 request_id=deep_get(hit_dict, 'nginx.access.request_id'),
             )
         except (KeyError, ValueError, TypeError):
@@ -65,14 +69,19 @@ def gen_access_entries(
             pass
 
 
-def gen_request_entries(
-        client: Elasticsearch, index: str, request_ids: typing.Sequence[str],
-) -> RequestEntryIterator:
+def get_request_search(client: Elasticsearch, index: str, request_ids: typing.Sequence[str]) -> Search:
     search = Search(using=client, index=index)
     search = (
         search.filter('term', response__type='json_response_log')
               .filter('terms', response__request_id=request_ids)
     )
+    return search
+
+
+def gen_request_entries(
+        client: Elasticsearch, index: str, request_ids: typing.Sequence[str],
+) -> RequestEntryIterator:
+    search = get_request_search(client, index, request_ids)
 
     logger.info('Scan %s with query %s, expect %d results', index, search.to_dict(), search.count())
     for hit in search.scan():

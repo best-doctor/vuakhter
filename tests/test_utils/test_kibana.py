@@ -2,7 +2,7 @@ import datetime
 import pytest
 
 from vuakhter.utils.helpers import timestamp
-from vuakhter.utils.kibana import get_timestamp, get_indices_for_timeslot
+from vuakhter.utils.kibana import get_timestamp, get_indices_for_timeslot, get_access_search, get_request_search
 
 
 @pytest.mark.parametrize(
@@ -43,3 +43,89 @@ def test_get_indices_for_timeslot(indices_boundaries, min_ts, max_ts, expected_l
 
     assert indices == expected_list
 
+
+@pytest.mark.parametrize(
+    "prefixes,expected",
+    (
+        (
+            ['/prefix'],
+            {
+                'query': {
+                    'bool': {
+                        'filter': [
+                            {'match_bool_prefix': {'url.original': '/prefix'}},
+                        ],
+                    },
+                },
+            },
+        ),
+        (
+            ['/prefix1', '/prefix2'],
+            {
+                'query': {
+                    'bool': {
+                        'filter': [
+                            {
+                                'bool': {
+                                    'should': [
+                                        {'match_bool_prefix': {'url.original': '/prefix1'}},
+                                        {'match_bool_prefix': {'url.original': '/prefix2'}},
+                                    ],
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        ),
+    ),
+)
+def test_get_access_query(prefixes, expected):
+    search = get_access_search(None, 'index', prefixes)
+
+    assert search.to_dict() == expected
+
+
+@pytest.mark.parametrize(
+    "request_ids,expected",
+    (
+        (
+            ['requestid'],
+            {
+                'query': {
+                    'bool': {
+                        'filter': [
+                            {'term': {'response.type': 'json_response_log'}},
+                            {
+                                'terms': {
+                                    'response.request_id': ['requestid'],
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        ),
+        (
+            ['requestid1', 'requestid2'],
+            {
+                'query': {
+                    'bool': {
+                        'filter': [
+                            {'term': {'response.type': 'json_response_log'}},
+                            {
+                                'terms': {
+                                    'response.request_id': ['requestid1', 'requestid2'],
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        ),
+    ),
+)
+def test_get_request_search(request_ids, expected):
+    search = get_request_search(None, 'index', request_ids)
+
+    assert search.to_dict() == expected
