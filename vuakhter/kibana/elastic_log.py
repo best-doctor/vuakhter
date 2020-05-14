@@ -12,8 +12,8 @@ if typing.TYPE_CHECKING:
 
 class ElasticLog:
     def __init__(
-            self, index_pattern: str, client: Elasticsearch = None,
-            *args: typing.Any, **kwargs: typing.Any,
+        self, index_pattern: str, client: Elasticsearch = None,
+        *args: typing.Any, **kwargs: typing.Any,
     ):
         self.client = client or Elasticsearch(*args, **kwargs)
         self.indices = scan_indices(self.client, index_pattern)

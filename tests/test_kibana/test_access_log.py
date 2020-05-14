@@ -4,6 +4,7 @@ from vuakhter.kibana.access_log import ElasticAccessLog
 
 def test_access_log(mocked_scan, mocked_indices_get, mocked_count):
     mocked_scan(scan_access_response)
+    mocked_indices_get()
     mocked_count(1)
     access_log = ElasticAccessLog()
 

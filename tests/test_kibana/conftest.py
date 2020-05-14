@@ -17,7 +17,7 @@ def mocked_scan(mocker):
 @pytest.fixture
 def mocked_search(mocker):
     def get_mocked_search(response=None):
-        mocked_search = mocker.patch('elasticsearch_dsl.search.scan')
+        mocked_search = mocker.patch.object(Elasticsearch, 'search')
         mocked_search.return_value = response
         return mocked_search
     return get_mocked_search
@@ -25,9 +25,11 @@ def mocked_search(mocker):
 
 @pytest.fixture
 def mocked_indices_get(mocker):
-    mocked_indicies_get = mocker.patch.object(IndicesClient, 'get')
-    mocked_indicies_get.return_value = {}
-    return mocked_indicies_get
+    def get_mocked_indices_get(response=None):
+        mocked_indices_get = mocker.patch.object(IndicesClient, 'get')
+        mocked_indices_get.return_value = response or {}
+        return mocked_indices_get
+    return get_mocked_indices_get
 
 
 @pytest.fixture

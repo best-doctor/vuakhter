@@ -113,22 +113,26 @@ def get_indices_for_timeslot(indices: IndicesBoundaries, start_ts: int, end_ts: 
     return indices_names
 
 
+def get_indicies_aggregation(client: Elasticsearch, indices: typing.List[str]) -> Search:
+    search = Search(using=client, index=','.join(indices))[0:0]
+    (
+        search.aggs
+              .bucket('index', 'terms', field='_index')
+              .metric('min_ts', 'min', field='@timestamp')
+              .metric('max_ts', 'max', field='@timestamp')
+    )
+    return search
+
+
 def scan_indices(client: Elasticsearch, index_pattern: str) -> IndicesBoundaries:
     try:
         indices_dict = client.indices.get(index_pattern)
     except NotFoundError:
         indices_dict = {}
-
     indices_list = []
 
     for chunk in chunks(indices_dict.keys()):
-        search = Search(using=client, index=','.join(chunk))[0:0]
-        (
-            search.aggs
-                  .bucket('index', 'terms', field='_index')
-                  .metric('min_ts', 'min', field='@timestamp')
-                  .metric('max_ts', 'max', field='@timestamp')
-        )
+        search = get_indicies_aggregation(client, chunk)
         result = search.execute()
         buckets = result.aggregations.index.buckets
         for bucket in buckets:

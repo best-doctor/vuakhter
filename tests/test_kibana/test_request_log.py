@@ -4,6 +4,7 @@ from vuakhter.kibana.requests_log import ElasticRequestsLog
 
 def test_requests_log(mocked_scan, mocked_indices_get, mocked_count):
     mocked_scan(scan_requests_response)
+    mocked_indices_get()
     mocked_count(1)
     requests_log = ElasticRequestsLog()
 
