@@ -2,8 +2,10 @@ import datetime
 import pytest
 
 from vuakhter.utils.helpers import timestamp
-from vuakhter.utils.kibana import get_timestamp, get_indices_for_timeslot, get_access_search, get_request_search, \
-    get_indicies_aggregation
+from vuakhter.utils.kibana import (
+    get_timestamp, get_indices_for_timeslot, get_access_search,
+    get_request_search, get_indicies_aggregation,
+)
 
 
 @pytest.mark.parametrize(
@@ -37,7 +39,7 @@ def test_get_timestamp(ts_str, expected_ts):
             timestamp(datetime.date(2019, 4, 1)),
             [],
         ),
-    )
+    ),
 )
 def test_get_indices_for_timeslot(indices_boundaries, min_ts, max_ts, expected_list):
     indices = get_indices_for_timeslot(indices_boundaries, min_ts, max_ts)
@@ -46,7 +48,7 @@ def test_get_indices_for_timeslot(indices_boundaries, min_ts, max_ts, expected_l
 
 
 @pytest.mark.parametrize(
-    "prefixes,expected",
+    'prefixes,expected',
     (
         (
             ['/prefix'],
@@ -88,7 +90,7 @@ def test_get_access_query(prefixes, expected):
 
 
 @pytest.mark.parametrize(
-    "request_ids,expected",
+    'request_ids,expected',
     (
         (
             ['requestid'],
@@ -131,8 +133,9 @@ def test_get_request_search(request_ids, expected):
 
     assert search.to_dict() == expected
 
+
 @pytest.mark.parametrize(
-    "expected",
+    'expected',
     (
         {
             'aggs': {

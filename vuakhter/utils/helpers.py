@@ -71,10 +71,8 @@ def is_valid(entry: RequestEntry) -> bool:
         body = json.loads(entry.json)
     except ValueError:
         return False
-    if entry.status_code == 200:
-        if not (set(body.keys()) - {'data', 'meta', 'request'}):
-            return True
-    else:
-        if not (set(body.keys()) - {'message', 'errors'}):
-            return True
+    if entry.status_code == 200 and not (set(body.keys()) - {'data', 'meta', 'request'}):
+        return True
+    elif not (set(body.keys()) - {'message', 'errors'}):
+        return True
     return False

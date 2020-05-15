@@ -35,6 +35,7 @@ def test_is_valid_passes(entry):
     [
         RequestEntry(ts=0, request_id='', status_code=200, json='{"data": {}, "errors": []}'),
         RequestEntry(ts=0, request_id='', status_code=400, json='{"data": {}, "errors": ["Validation error"]}'),
+        RequestEntry(ts=0, request_id='', status_code=400, json='{"'),
     ],
 )
 def test_is_valid_fails(entry):

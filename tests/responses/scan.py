@@ -34,7 +34,7 @@ scan_access_response = {
                         },
                     },
                     'service': {'type': 'nginx'},
-                }
+                },
             },
         ],
     },

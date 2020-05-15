@@ -1,4 +1,4 @@
-from tests.test_kibana.responses.scan import scan_requests_response
+from tests.responses.scan import scan_requests_response
 from vuakhter.kibana.requests_log import ElasticRequestsLog
 
 

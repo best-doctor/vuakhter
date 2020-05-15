@@ -15,7 +15,7 @@ def test_endpoint_counter(endpoint_counter):
     assert endpoint_counter.statistics == {
         '/endpoint/_INT_': 6,
         '/endpoint/_INT_/list': 4,
-        '/endpoint/_INT_/list/_INT_': 1
+        '/endpoint/_INT_/list/_INT_': 1,
     }
 
 
@@ -49,15 +49,27 @@ def test_complex_counter(complex_counter):
         ('/endpoint/_INT_/list/_INT_', 'PUT', 200): 1,
     }
 
+
 @pytest.mark.parametrize(
-    "top,mangle,expected",
+    'top,mangle,expected_top,expected_report',
     (
-        (2, False, [('/endpoint/2', 150.0), ('/endpoint/1/list', 100.0)]),
-        (2, True, [('/endpoint/_INT_', 150.0), ('/endpoint/_INT_/list', 100.0)]),
+        (
+            2, False, [('/endpoint/2', 150.0), ('/endpoint/1/list', 100.0)],
+            '/endpoint/2 150.0\n/endpoint/1/list 100.0',
+        ),
+        (
+            2, True, [('/endpoint/_INT_', 150.0), ('/endpoint/_INT_/list', 100.0)],
+            '/endpoint/_INT_ 150.0\n/endpoint/_INT_/list 100.0',
+        ),
     ),
 )
-def test_slow_log_counter_mangle(slow_log_counter, top, mangle, expected):
+def test_slow_log_counter_mangle(slow_log_counter, top, mangle, expected_top, expected_report):
     counter = slow_log_counter(top=top, mangle=mangle)
 
-    assert counter.statistics['top'] == expected
+    assert counter.statistics['top'] == expected_top
+    assert counter.report() == expected_report
 
+
+def test_schema_validator_counter(schema_validator_counter):
+    assert schema_validator_counter.statistics == {'invalid': 0, 'missed': 11, 'valid': 0}
+    assert schema_validator_counter.report() == 'Valid requests 0.00% (0 out of 0, 11 missed)'

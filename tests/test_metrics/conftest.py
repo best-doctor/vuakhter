@@ -1,7 +1,10 @@
 import pytest
 
-from vuakhter.metrics.counters import MethodCounter, EndpointCounter, ResponseTimeCounter, ComplexCounter, \
-    StatusCounter, SlowLogCounter
+from vuakhter.kibana.requests_log import ElasticRequestsLog
+from vuakhter.metrics.counters import (
+    MethodCounter, EndpointCounter, ResponseTimeCounter, ComplexCounter,
+    StatusCounter, SlowLogCounter, SchemaValidatorCounter,
+)
 from vuakhter.utils.types import AccessEntry
 
 
@@ -65,3 +68,10 @@ def slow_log_counter(counter_instance):
     def get_slow_log_counter(**kwargs):
         return counter_instance(SlowLogCounter, **kwargs)
     return get_slow_log_counter
+
+
+@pytest.fixture()
+def schema_validator_counter(counter_instance, mocked_indices_get):
+    mocked_indices_get({})
+    requests_log = ElasticRequestsLog()
+    return counter_instance(SchemaValidatorCounter, requests_log=requests_log)

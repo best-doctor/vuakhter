@@ -31,7 +31,7 @@ class StatisticsMetrics:
         raise NotImplementedError()
 
     def report(self) -> str:
-        report = [self.description, '-' * len(self.description), f'{self._statistics}']
+        report = [self.description, '-' * len(self.description)]
         for key, value in self._statistics.items():
             report.append(f'{key} {value}')
         return '\n'.join(report)

@@ -1,12 +1,12 @@
 import pytest
 
-from tests.test_kibana.responses.indices import indices_get_response, indices_aggregation_response
+from tests.responses.indices import indices_get_response, indices_aggregation_response
 from vuakhter.kibana.elastic_log import ElasticLog
 from vuakhter.utils.types import Boundaries
 
 
 @pytest.mark.parametrize(
-    "expected",
+    'expected',
     (
         {
             'index-000005': Boundaries(min_ts=1575376335698.0, max_ts=1575463337966.0),
@@ -17,7 +17,7 @@ from vuakhter.utils.types import Boundaries
         },
     ),
 )
-def test_requests_log(mocked_indices_get, mocked_search, expected):
+def test_elastic_log(mocked_indices_get, mocked_search, expected):
     mocked_indices_get(indices_get_response)
     mocked_search(indices_aggregation_response)
     elastic_log = ElasticLog('index-*')
