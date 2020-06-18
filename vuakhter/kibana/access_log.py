@@ -14,7 +14,9 @@ class ElasticAccessLog(ElasticLog, AccessLog):
     def __init__(self, index_pattern: str = 'filebeat-*', *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(index_pattern, *args, **kwargs)
 
-    def gen_entries(self, index: str, **kwargs: typing.Any) -> typing.Iterator[AccessEntry]:
+    def gen_entries(
+        self, index: str, start_ts: int = None, end_ts: int = None, **kwargs: typing.Any,
+    ) -> typing.Iterator[AccessEntry]:
         prefixes = kwargs.pop('prefixes', None)
         if prefixes:
-            yield from gen_access_entries(self.client, index, prefixes)
+            yield from gen_access_entries(self.client, index, start_ts, end_ts, prefixes)

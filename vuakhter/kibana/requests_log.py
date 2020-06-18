@@ -13,7 +13,9 @@ class ElasticRequestsLog(ElasticLog, RequestsLog):
     def __init__(self, index_pattern: str = 'django-*', *args: typing.Any, **kwargs: typing.Any):
         super().__init__(index_pattern, *args, **kwargs)
 
-    def gen_entries(self, index: str, **kwargs: typing.Any) -> typing.Iterator[RequestEntry]:
+    def gen_entries(
+        self, index: str, start_ts: int = None, end_ts: int = None, **kwargs: typing.Any,
+    ) -> typing.Iterator[RequestEntry]:
         request_ids = kwargs.pop('request_ids', None)
         if request_ids:
-            yield from gen_request_entries(self.client, index, request_ids)
+            yield from gen_request_entries(self.client, index, start_ts, end_ts, request_ids)

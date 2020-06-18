@@ -18,11 +18,11 @@ class ElasticLog:
         self.client = client or Elasticsearch(*args, **kwargs)
         self.indices = scan_indices(self.client, index_pattern)
 
-    def gen_entries(self, index: str, **kwargs: typing.Any) -> AnyIterator:
+    def gen_entries(self, index: str, start_ts: int = None, end_ts: int = None, **kwargs: typing.Any) -> AnyIterator:
         raise NotImplementedError()
 
     def get_records(self, start_ts: int, end_ts: int, **kwargs: typing.Any) -> AnyIterator:
         indices = get_indices_for_timeslot(self.indices, start_ts, end_ts)
 
         for chunk in chunks(indices):
-            yield from self.gen_entries(','.join(chunk), **kwargs)
+            yield from self.gen_entries(','.join(chunk), start_ts, end_ts, **kwargs)

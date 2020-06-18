@@ -31,18 +31,38 @@ def get_timestamp(ts_str: str) -> int:
     )
 
 
-def get_access_search(client: Elasticsearch, index: str, prefixes: typing.Sequence[str]) -> Search:
-    prefix, *tail = prefixes
-    query = Q('match_bool_prefix', url__original=prefix)
-    for prefix in tail:
-        query = query | Q('match_bool_prefix', url__original=prefix)
-    return Search(using=client, index=index).filter(query)
+def get_range_filter(start_ts: int = None, end_ts: int = None) -> typing.Optional[Q]:
+    lookup = {}
+    if start_ts:
+        lookup['gte'] = start_ts
+    if end_ts:
+        lookup['lte'] = end_ts
+    if len(lookup):
+        return Q('range', **{'@timestamp': lookup})
+
+
+def get_access_search(
+    client: Elasticsearch, index: str, start_ts: int = None, end_ts: int = None,
+    prefixes: typing.Sequence[str] = None,
+) -> Search:
+    search = Search(using=client, index=index)
+    if prefixes:
+        prefix, *tail = prefixes
+        query = Q('match_bool_prefix', url__original=prefix)
+        for prefix in tail:
+            query = query | Q('match_bool_prefix', url__original=prefix)
+        search = search.filter(query)
+    range_filter = get_range_filter(start_ts, end_ts)
+    if range_filter:
+        search = search.filter(range_filter)
+    return search
 
 
 def gen_access_entries(
-        client: Elasticsearch, index: str, prefixes: typing.Sequence[str],
+    client: Elasticsearch, index: str, start_ts: int = None, end_ts: int = None,
+    prefixes: typing.Sequence[str] = None,
 ) -> AccessEntryIterator:
-    search = get_access_search(client, index, prefixes)
+    search = get_access_search(client, index, start_ts, end_ts, prefixes)
 
     logger.info('Scan %s with query %s, expect %d results', index, search.to_dict(), search.count())
     for hit in search.scan():
@@ -69,19 +89,27 @@ def gen_access_entries(
             pass
 
 
-def get_request_search(client: Elasticsearch, index: str, request_ids: typing.Sequence[str]) -> Search:
+def get_request_search(
+    client: Elasticsearch, index: str, start_ts: int = None, end_ts: int = None,
+    request_ids: typing.Sequence[str] = None,
+) -> Search:
     search = Search(using=client, index=index)
-    search = (
-        search.filter('term', response__type='json_response_log')
-              .filter('terms', response__request_id=request_ids)
-    )
+    if request_ids:
+        search = (
+            search.filter('term', response__type='json_response_log')
+                  .filter('terms', response__request_id=request_ids)
+        )
+    range_filter = get_range_filter(start_ts, end_ts)
+    if range_filter:
+        search = search.filter(range_filter)
     return search
 
 
 def gen_request_entries(
-        client: Elasticsearch, index: str, request_ids: typing.Sequence[str],
+    client: Elasticsearch, index: str, start_ts: int = None, end_ts: int = None,
+    request_ids: typing.Sequence[str] = None,
 ) -> RequestEntryIterator:
-    search = get_request_search(client, index, request_ids)
+    search = get_request_search(client, index, start_ts, end_ts, request_ids)
 
     logger.info('Scan %s with query %s, expect %d results', index, search.to_dict(), search.count())
     for hit in search.scan():

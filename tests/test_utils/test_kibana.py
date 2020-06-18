@@ -48,10 +48,10 @@ def test_get_indices_for_timeslot(indices_boundaries, min_ts, max_ts, expected_l
 
 
 @pytest.mark.parametrize(
-    'prefixes,expected',
+    'start_ts,end_ts,prefixes,expected',
     (
         (
-            ['/prefix'],
+            None, None, ['/prefix'],
             {
                 'query': {
                     'bool': {
@@ -63,7 +63,7 @@ def test_get_indices_for_timeslot(indices_boundaries, min_ts, max_ts, expected_l
             },
         ),
         (
-            ['/prefix1', '/prefix2'],
+            None, None, ['/prefix1', '/prefix2'],
             {
                 'query': {
                     'bool': {
@@ -81,19 +81,35 @@ def test_get_indices_for_timeslot(indices_boundaries, min_ts, max_ts, expected_l
                 },
             },
         ),
+        (
+            1585699200, 1585743132, [],
+            {
+                'query': {
+                    'bool': {
+                        'filter': [
+                            {'range': {'@timestamp': {'gte': 1585699200, 'lte': 1585743132}}},
+                        ],
+                    },
+                },
+            },
+        ),
+        (
+            None, None, [],
+            {},
+        ),
     ),
 )
-def test_get_access_query(prefixes, expected):
-    search = get_access_search(None, 'index', prefixes)
+def test_get_access_query_without_timerange(start_ts, end_ts, prefixes, expected):
+    search = get_access_search(None, 'index', start_ts, end_ts, prefixes)
 
     assert search.to_dict() == expected
 
 
 @pytest.mark.parametrize(
-    'request_ids,expected',
+    'start_ts,end_ts,request_ids,expected',
     (
         (
-            ['requestid'],
+            None, None, ['requestid'],
             {
                 'query': {
                     'bool': {
@@ -110,7 +126,7 @@ def test_get_access_query(prefixes, expected):
             },
         ),
         (
-            ['requestid1', 'requestid2'],
+            None, None, ['requestid1', 'requestid2'],
             {
                 'query': {
                     'bool': {
@@ -126,10 +142,26 @@ def test_get_access_query(prefixes, expected):
                 },
             },
         ),
+        (
+            1585699200, 1585743132, [],
+            {
+                'query': {
+                    'bool': {
+                        'filter': [
+                            {'range': {'@timestamp': {'gte': 1585699200, 'lte': 1585743132}}},
+                        ],
+                    },
+                },
+            },
+        ),
+        (
+            None, None, [],
+            {},
+        ),
     ),
 )
-def test_get_request_search(request_ids, expected):
-    search = get_request_search(None, 'index', request_ids)
+def test_get_request_search(start_ts, end_ts, request_ids, expected):
+    search = get_request_search(None, 'index', start_ts, end_ts, request_ids)
 
     assert search.to_dict() == expected
 
