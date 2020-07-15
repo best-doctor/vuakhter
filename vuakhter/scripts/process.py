@@ -4,10 +4,10 @@ import os
 
 from elasticsearch import Elasticsearch
 
-from vuakhter.analyzer import HttpAnalyzer
+from vuakhter.analyzer import AccessLogAnalyzer
 from vuakhter.kibana.access_log import ElasticAccessLog
 from vuakhter.kibana.requests_log import ElasticRequestsLog
-from vuakhter.metrics.counters import SchemaValidatorCounter
+from vuakhter.metrics.counters import SchemaValidatorCounter, SlowLogCounter, ComplexCounter
 
 
 def main() -> None:
@@ -39,14 +39,16 @@ def main() -> None:
     client = Elasticsearch(http_auth=(args.es_user, args.es_pass), host=args.es_host, port=args.es_port, use_ssl=True)
     access_log = ElasticAccessLog('filebeat-*', client=client)
     requests_log = ElasticRequestsLog('django-*', client=client)
-    analyzer = HttpAnalyzer(access_log, prefixes=args.prefixes)
+    analyzer = AccessLogAnalyzer(access_log)
 
     analyzer.add_metric(SchemaValidatorCounter(requests_log))
+    analyzer.add_metric(SlowLogCounter(top=10, mangle=False))
+    analyzer.add_metric(ComplexCounter())
 
     end_date = args.end_date or datetime.datetime.now()
     start_date = args.start_date or end_date - datetime.timedelta(days=1)
 
-    analyzer.analyze(start_date, end_date)
+    analyzer.analyze(start_date, end_date, prefixes=(args.prefixes or ['/']))
 
     for metric in analyzer.metrics:
         metric.finalize()

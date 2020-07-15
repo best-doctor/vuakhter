@@ -1,7 +1,8 @@
 from __future__ import annotations
 import typing
 
-from vuakhter.utils.helpers import timestamp
+from vuakhter.base.base_log import BaseLog
+from vuakhter.utils.types import TimestampRange
 
 if typing.TYPE_CHECKING:
     from vuakhter.base.access_log import AccessLog
@@ -13,14 +14,12 @@ if typing.TYPE_CHECKING:
     PrefixesIterable = typing.Iterable[str]
 
 
-class HttpAnalyzer:
+class BaseLogAnalyzer:
     def __init__(
-            self, access_log: AccessLog,
-            prefixes: PrefixesIterable = None,
-            metrics: MetricsIterable = None,
+        self, log: BaseLog,
+        metrics: MetricsIterable = None,
     ) -> None:
-        self.access_log = access_log
-        self.prefixes = list(prefixes or ['/'])
+        self.log = log
         self._metrics = list(metrics or [])
 
     @property
@@ -30,16 +29,23 @@ class HttpAnalyzer:
     def add_metric(self, metric: StatisticsMetrics) -> None:
         self._metrics.append(metric)
 
-    def analyze(self, start_date: DateOrDatetime, end_date: DateOrDatetime) -> None:
+    def analyze(self, start_date: DateOrDatetime, end_date: DateOrDatetime, **kwargs: typing.Any) -> None:
         if not self._metrics:
             return
 
-        start_ts = timestamp(start_date, ms=True)
-        end_ts = timestamp(end_date, ms=True)
+        ts_range = TimestampRange.from_datetime(start_date, end_date, ms=True)
 
         for metric in self._metrics:
             metric.initialize()
 
-        for entry in self.access_log.get_records(start_ts, end_ts, prefixes=self.prefixes):
+        for entry in self.log.get_records(ts_range, **kwargs):
             for metric in self._metrics:
                 metric.process_entry(entry)
+
+
+class AccessLogAnalyzer(BaseLogAnalyzer):
+    def __init__(
+        self, access_log: AccessLog,
+        metrics: MetricsIterable = None,
+    ) -> None:
+        super().__init__(access_log, metrics)

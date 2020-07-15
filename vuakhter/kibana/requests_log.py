@@ -6,7 +6,7 @@ from vuakhter.kibana.elastic_log import ElasticLog
 from vuakhter.utils.kibana import gen_request_entries
 
 if typing.TYPE_CHECKING:
-    from vuakhter.utils.types import RequestEntry
+    from vuakhter.utils.types import RequestEntry, TimestampRange
 
 
 class ElasticRequestsLog(ElasticLog, RequestsLog):
@@ -14,8 +14,8 @@ class ElasticRequestsLog(ElasticLog, RequestsLog):
         super().__init__(index_pattern, *args, **kwargs)
 
     def gen_entries(
-        self, index: str, start_ts: int = None, end_ts: int = None, **kwargs: typing.Any,
+        self, index: str, ts_range: TimestampRange = None, **kwargs: typing.Any,
     ) -> typing.Iterator[RequestEntry]:
         request_ids = kwargs.pop('request_ids', None)
         if request_ids:
-            yield from gen_request_entries(self.client, index, start_ts, end_ts, request_ids)
+            yield from gen_request_entries(self.client, index, ts_range, request_ids)

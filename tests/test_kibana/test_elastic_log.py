@@ -2,18 +2,18 @@ import pytest
 
 from tests.responses.indices import indices_get_response, indices_aggregation_response
 from vuakhter.kibana.elastic_log import ElasticLog
-from vuakhter.utils.types import Boundaries
+from vuakhter.utils.types import TimestampRange
 
 
 @pytest.mark.parametrize(
     'expected',
     (
         {
-            'index-000005': Boundaries(min_ts=1575376335698.0, max_ts=1575463337966.0),
-            'index-000004': Boundaries(min_ts=1575289333416.0, max_ts=1575376342679.0),
-            'index-000003': Boundaries(min_ts=1575028332982.0, max_ts=1575115339253.0),
-            'index-000002': Boundaries(min_ts=1575202335222.0, max_ts=1575289336569.0),
-            'index-000001': Boundaries(min_ts=1575115342163.0, max_ts=1575202338431.0),
+            'index-000005': TimestampRange(1575376335698, 1575463337966),
+            'index-000004': TimestampRange(1575289333416, 1575376342679),
+            'index-000003': TimestampRange(1575028332982, 1575115339253),
+            'index-000002': TimestampRange(1575202335222, 1575289336569),
+            'index-000001': TimestampRange(1575115342163, 1575202338431),
         },
     ),
 )

@@ -6,6 +6,7 @@ import math
 
 from vuakhter.metrics.base import StatisticsMetrics
 from vuakhter.utils.helpers import get_endpoint, is_valid
+from vuakhter.utils.types import TimestampRange
 
 if typing.TYPE_CHECKING:
     from vuakhter.base.requests_log import RequestsLog
@@ -101,7 +102,10 @@ class SchemaValidatorCounter(StatisticsMetrics):
         if not self.check_ids:
             return
         valid_cnt, invalid_cnt = 0, 0
-        for record in self.requests_log.get_records(self.min_ts, self.max_ts, request_ids=self.check_ids):
+        for record in self.requests_log.get_records(
+            TimestampRange(self.min_ts, self.max_ts),
+            request_ids=self.check_ids,
+        ):
             if is_valid(record):
                 valid_cnt += 1
             else:

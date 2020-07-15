@@ -10,7 +10,7 @@ from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Query, Q
 
 from vuakhter.utils.helpers import chunks, deep_get, timestamp
-from vuakhter.utils.types import Boundaries, AccessEntry, RequestEntry
+from vuakhter.utils.types import AccessEntry, RequestEntry, TimestampRange
 
 if typing.TYPE_CHECKING:
     from elasticsearch import Elasticsearch
@@ -31,18 +31,19 @@ def get_timestamp(ts_str: str) -> int:
     )
 
 
-def get_range_filter(start_ts: int = None, end_ts: int = None) -> typing.Optional[Q]:
-    lookup = {}
-    if start_ts:
-        lookup['gte'] = start_ts
-    if end_ts:
-        lookup['lte'] = end_ts
-    if len(lookup):
-        return Q('range', **{'@timestamp': lookup})
+def get_range_filter(ts_range: TimestampRange = None) -> typing.Optional[Q]:
+    if ts_range:
+        lookup = {}
+        if ts_range.start_ts:
+            lookup['gte'] = ts_range.start_ts
+        if ts_range.end_ts:
+            lookup['lte'] = ts_range.end_ts
+        if len(lookup):
+            return Q('range', **{'@timestamp': lookup})
 
 
 def get_access_search(
-    client: Elasticsearch, index: str, start_ts: int = None, end_ts: int = None,
+    client: Elasticsearch, index: str, ts_range: TimestampRange = None,
     prefixes: typing.Sequence[str] = None,
 ) -> Search:
     search = Search(using=client, index=index)
@@ -52,17 +53,17 @@ def get_access_search(
         for prefix in tail:
             query = query | Q('match_bool_prefix', url__original=prefix)
         search = search.filter(query)
-    range_filter = get_range_filter(start_ts, end_ts)
+    range_filter = get_range_filter(ts_range)
     if range_filter:
         search = search.filter(range_filter)
     return search
 
 
 def gen_access_entries(
-    client: Elasticsearch, index: str, start_ts: int = None, end_ts: int = None,
+    client: Elasticsearch, index: str, ts_range: TimestampRange = None,
     prefixes: typing.Sequence[str] = None,
 ) -> AccessEntryIterator:
-    search = get_access_search(client, index, start_ts, end_ts, prefixes)
+    search = get_access_search(client, index, ts_range, prefixes)
 
     logger.info('Scan %s with query %s, expect %d results', index, search.to_dict(), search.count())
     for hit in search.scan():
@@ -90,7 +91,7 @@ def gen_access_entries(
 
 
 def get_request_search(
-    client: Elasticsearch, index: str, start_ts: int = None, end_ts: int = None,
+    client: Elasticsearch, index: str, ts_range: TimestampRange = None,
     request_ids: typing.Sequence[str] = None,
 ) -> Search:
     search = Search(using=client, index=index)
@@ -99,17 +100,17 @@ def get_request_search(
             search.filter('term', response__type='json_response_log')
                   .filter('terms', response__request_id=request_ids)
         )
-    range_filter = get_range_filter(start_ts, end_ts)
+    range_filter = get_range_filter(ts_range)
     if range_filter:
         search = search.filter(range_filter)
     return search
 
 
 def gen_request_entries(
-    client: Elasticsearch, index: str, start_ts: int = None, end_ts: int = None,
+    client: Elasticsearch, index: str, ts_range: TimestampRange = None,
     request_ids: typing.Sequence[str] = None,
 ) -> RequestEntryIterator:
-    search = get_request_search(client, index, start_ts, end_ts, request_ids)
+    search = get_request_search(client, index, ts_range, request_ids)
 
     logger.info('Scan %s with query %s, expect %d results', index, search.to_dict(), search.count())
     for hit in search.scan():
@@ -132,12 +133,13 @@ def gen_request_entries(
             pass
 
 
-def get_indices_for_timeslot(indices: IndicesBoundaries, start_ts: int, end_ts: int) -> typing.List[str]:
+def get_indices_for_timeslot(indices: IndicesBoundaries, ts_range: TimestampRange = None) -> typing.List[str]:
     indices_names = []
-    for name, boundaries in indices.items():
-        if boundaries.max_ts <= start_ts or boundaries.min_ts >= end_ts:
-            continue
-        indices_names.append(name)
+    if ts_range:
+        for name, boundaries in indices.items():
+            if not ts_range.overlaps(boundaries):
+                continue
+            indices_names.append(name)
     return indices_names
 
 
@@ -165,10 +167,10 @@ def scan_indices(client: Elasticsearch, index_pattern: str) -> IndicesBoundaries
         buckets = result.aggregations.index.buckets
         for bucket in buckets:
             indices_list.append(
-                (bucket.key, bucket.min_ts.value, bucket.max_ts.value),
+                (bucket.key, int(bucket.min_ts.value), round(bucket.max_ts.value)),
             )
     return {
-        index: Boundaries(min_ts=min_ts, max_ts=max_ts)
+        index: TimestampRange(start_ts=min_ts, end_ts=max_ts)
         for index, min_ts, max_ts
         in sorted(indices_list, key=operator.itemgetter(1), reverse=True)
     }

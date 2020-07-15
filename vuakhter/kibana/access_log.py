@@ -7,7 +7,7 @@ from vuakhter.kibana.elastic_log import ElasticLog
 from vuakhter.utils.kibana import gen_access_entries
 
 if typing.TYPE_CHECKING:
-    from vuakhter.utils.types import AccessEntry
+    from vuakhter.utils.types import AccessEntry, TimestampRange
 
 
 class ElasticAccessLog(ElasticLog, AccessLog):
@@ -15,8 +15,8 @@ class ElasticAccessLog(ElasticLog, AccessLog):
         super().__init__(index_pattern, *args, **kwargs)
 
     def gen_entries(
-        self, index: str, start_ts: int = None, end_ts: int = None, **kwargs: typing.Any,
+        self, index: str, ts_range: TimestampRange = None, **kwargs: typing.Any,
     ) -> typing.Iterator[AccessEntry]:
         prefixes = kwargs.pop('prefixes', None)
         if prefixes:
-            yield from gen_access_entries(self.client, index, start_ts, end_ts, prefixes)
+            yield from gen_access_entries(self.client, index, ts_range, prefixes)

@@ -49,7 +49,7 @@ def get_endpoint(url: str) -> str:
 
 
 def timestamp(
-        dt: DateOrDatetime, epoch: DateOrDatetime = None, ms: bool = False,
+    dt: DateOrDatetime, epoch: DateOrDatetime = None, ms: bool = False,
 ) -> int:
     epoch = epoch or type(dt)(1970, 1, 1)
     ms_multiplier = 1000 if ms else 1

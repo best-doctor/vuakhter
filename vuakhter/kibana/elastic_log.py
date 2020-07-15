@@ -3,14 +3,15 @@ import typing
 
 from elasticsearch import Elasticsearch
 
+from vuakhter.base.base_log import BaseLog
 from vuakhter.utils.helpers import chunks
 from vuakhter.utils.kibana import get_indices_for_timeslot, scan_indices
 
 if typing.TYPE_CHECKING:
-    AnyIterator = typing.Iterator[typing.Any]
+    from vuakhter.utils.types import TimestampRange, AnyIterator
 
 
-class ElasticLog:
+class ElasticLog(BaseLog):
     def __init__(
         self, index_pattern: str, client: Elasticsearch = None,
         *args: typing.Any, **kwargs: typing.Any,
@@ -18,11 +19,11 @@ class ElasticLog:
         self.client = client or Elasticsearch(*args, **kwargs)
         self.indices = scan_indices(self.client, index_pattern)
 
-    def gen_entries(self, index: str, start_ts: int = None, end_ts: int = None, **kwargs: typing.Any) -> AnyIterator:
+    def gen_entries(self, index: str, ts_range: TimestampRange = None, **kwargs: typing.Any) -> AnyIterator:
         raise NotImplementedError()
 
-    def get_records(self, start_ts: int, end_ts: int, **kwargs: typing.Any) -> AnyIterator:
-        indices = get_indices_for_timeslot(self.indices, start_ts, end_ts)
+    def get_records(self, ts_range: TimestampRange = None, **kwargs: typing.Any) -> AnyIterator:
+        indices = get_indices_for_timeslot(self.indices, ts_range)
 
         for chunk in chunks(indices):
-            yield from self.gen_entries(','.join(chunk), start_ts, end_ts, **kwargs)
+            yield from self.gen_entries(','.join(chunk), ts_range, **kwargs)
