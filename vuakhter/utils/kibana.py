@@ -14,7 +14,9 @@ from vuakhter.utils.types import AccessEntry, RequestEntry, TimestampRange
 
 if typing.TYPE_CHECKING:
     from elasticsearch import Elasticsearch
-    from vuakhter.utils.types import IndicesBoundaries, AccessEntryIterator, RequestEntryIterator
+    from vuakhter.utils.types import (
+        IndicesBoundaries, AccessEntryIterator, RequestEntryIterator, SearchFactory, AnyIterable,
+    )
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +33,7 @@ def get_timestamp(ts_str: str) -> int:
     )
 
 
-def get_range_filter(ts_range: TimestampRange = None) -> typing.Optional[Q]:
+def get_range_filter(ts_range: TimestampRange = None, timestamp_field: str = 'timestamp') -> typing.Optional[Q]:
     if ts_range:
         lookup = {}
         if ts_range.start_ts:
@@ -39,34 +41,52 @@ def get_range_filter(ts_range: TimestampRange = None) -> typing.Optional[Q]:
         if ts_range.end_ts:
             lookup['lte'] = ts_range.end_ts
         if len(lookup):
-            return Q('range', **{'@timestamp': lookup})
+            return Q('range', **{timestamp_field: lookup})
+
+
+def search_factory(
+    client: Elasticsearch, ts_range: TimestampRange = None, timestamp_field: str = 'timestamp',
+) -> SearchFactory:
+    range_filter = get_range_filter(ts_range, timestamp_field)
+
+    def get_search(index: str) -> Search:
+        search = Search(using=client, index=index)
+        if range_filter:
+            search = search.filter(range_filter)
+        return search
+
+    return get_search
+
+
+def filter_url_by_prefixes(
+    search: Search, prefixes: typing.Sequence[str] = None, url_field: str = 'url__original',
+) -> Search:
+    if prefixes:
+        prefix, *tail = prefixes
+        lookup = {url_field: prefix}
+        query = Q('match_bool_prefix', **lookup)
+        for prefix in tail:
+            lookup[url_field] = prefix
+            query = query | Q('match_bool_prefix', **lookup)
+        search = search.filter(query)
+    return search
 
 
 def get_access_search(
     client: Elasticsearch, index: str, ts_range: TimestampRange = None,
     prefixes: typing.Sequence[str] = None,
+    timestamp_field: str = 'timestamp',
 ) -> Search:
     search = Search(using=client, index=index)
-    if prefixes:
-        prefix, *tail = prefixes
-        query = Q('match_bool_prefix', url__original=prefix)
-        for prefix in tail:
-            query = query | Q('match_bool_prefix', url__original=prefix)
-        search = search.filter(query)
-    range_filter = get_range_filter(ts_range)
+    search = filter_url_by_prefixes(search, prefixes)
+    range_filter = get_range_filter(ts_range, timestamp_field)
     if range_filter:
         search = search.filter(range_filter)
     return search
 
 
-def gen_access_entries(
-    client: Elasticsearch, index: str, ts_range: TimestampRange = None,
-    prefixes: typing.Sequence[str] = None,
-) -> AccessEntryIterator:
-    search = get_access_search(client, index, ts_range, prefixes)
-
-    logger.info('Scan %s with query %s, expect %d results', index, search.to_dict(), search.count())
-    for hit in search.scan():
+def gen_access_entries(hits: AnyIterable) -> AccessEntryIterator:
+    for hit in hits:
         hit_dict = hit.to_dict()
         try:
             yield AccessEntry(
@@ -90,30 +110,32 @@ def gen_access_entries(
             pass
 
 
-def get_request_search(
-    client: Elasticsearch, index: str, ts_range: TimestampRange = None,
-    request_ids: typing.Sequence[str] = None,
+def filter_by_request_ids(
+    search: Search, request_ids: typing.Sequence[str] = None,
 ) -> Search:
-    search = Search(using=client, index=index)
     if request_ids:
         search = (
             search.filter('term', response__type='json_response_log')
                   .filter('terms', response__request_id=request_ids)
         )
-    range_filter = get_range_filter(ts_range)
+    return search
+
+
+def get_request_search(
+    client: Elasticsearch, index: str, ts_range: TimestampRange = None,
+    request_ids: typing.Sequence[str] = None,
+    timestamp_field: str = 'timestamp',
+) -> Search:
+    search = Search(using=client, index=index)
+    search = filter_by_request_ids(search, request_ids)
+    range_filter = get_range_filter(ts_range, timestamp_field)
     if range_filter:
         search = search.filter(range_filter)
     return search
 
 
-def gen_request_entries(
-    client: Elasticsearch, index: str, ts_range: TimestampRange = None,
-    request_ids: typing.Sequence[str] = None,
-) -> RequestEntryIterator:
-    search = get_request_search(client, index, ts_range, request_ids)
-
-    logger.info('Scan %s with query %s, expect %d results', index, search.to_dict(), search.count())
-    for hit in search.scan():
+def gen_request_entries(hits: AnyIterable) -> RequestEntryIterator:
+    for hit in hits:
         hit_dict = hit.to_dict()
         try:
             yield RequestEntry(
@@ -143,18 +165,20 @@ def get_indices_for_timeslot(indices: IndicesBoundaries, ts_range: TimestampRang
     return indices_names
 
 
-def get_indicies_aggregation(client: Elasticsearch, indices: typing.List[str]) -> Search:
+def get_indices_aggregation(
+    client: Elasticsearch, indices: typing.List[str], timestamp_field: str = 'timestamp',
+) -> Search:
     search = Search(using=client, index=','.join(indices))[0:0]
     (
         search.aggs
               .bucket('index', 'terms', field='_index')
-              .metric('min_ts', 'min', field='@timestamp')
-              .metric('max_ts', 'max', field='@timestamp')
+              .metric('min_ts', 'min', field=timestamp_field)
+              .metric('max_ts', 'max', field=timestamp_field)
     )
     return search
 
 
-def scan_indices(client: Elasticsearch, index_pattern: str) -> IndicesBoundaries:
+def scan_indices(client: Elasticsearch, index_pattern: str, timestamp_field: str = 'timestamp') -> IndicesBoundaries:
     try:
         indices_dict = client.indices.get(index_pattern)
     except NotFoundError:
@@ -162,13 +186,19 @@ def scan_indices(client: Elasticsearch, index_pattern: str) -> IndicesBoundaries
     indices_list = []
 
     for chunk in chunks(indices_dict.keys()):
-        search = get_indicies_aggregation(client, chunk)
+        search = get_indices_aggregation(client, chunk, timestamp_field)
         result = search.execute()
         buckets = result.aggregations.index.buckets
         for bucket in buckets:
-            indices_list.append(
-                (bucket.key, int(bucket.min_ts.value), round(bucket.max_ts.value)),
-            )
+            try:
+                indices_list.append(
+                    (bucket.key, int(bucket.min_ts.value), round(bucket.max_ts.value)),
+                )
+            except TypeError:
+                logger.debug(
+                    'Wrong aggregation results for index %s, min_ts %s, max_ts %s',
+                    bucket.key, bucket.min_ts.value, bucket.max_ts.value,
+                )
     return {
         index: TimestampRange(start_ts=min_ts, end_ts=max_ts)
         for index, min_ts, max_ts

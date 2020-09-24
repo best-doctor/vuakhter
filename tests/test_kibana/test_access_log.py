@@ -8,6 +8,7 @@ def test_access_log(mocked_scan, mocked_indices_get, mocked_count):
     mocked_count(1)
     access_log = ElasticAccessLog()
 
-    entries = list(access_log.gen_entries('index', prefixes=['/prefix']))
+    get_search = access_log.get_search_factory()
+    entries = list(access_log.gen_entries('index', get_search, prefixes=['/prefix']))
 
     assert len(entries) == 1

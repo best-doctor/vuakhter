@@ -4,7 +4,7 @@ import pytest
 from vuakhter.utils.helpers import timestamp
 from vuakhter.utils.kibana import (
     get_timestamp, get_indices_for_timeslot, get_access_search,
-    get_request_search, get_indicies_aggregation,
+    get_request_search, get_indices_aggregation,
 )
 from vuakhter.utils.types import TimestampRange
 
@@ -106,7 +106,7 @@ def test_get_indices_for_timeslot(indices_boundaries, ts_range, expected_list):
     ),
 )
 def test_get_access_query_without_timerange(ts_range, prefixes, expected):
-    search = get_access_search(None, 'index', ts_range, prefixes)
+    search = get_access_search(None, 'index', ts_range, prefixes, timestamp_field='@timestamp')
 
     assert search.to_dict() == expected
 
@@ -167,30 +167,49 @@ def test_get_access_query_without_timerange(ts_range, prefixes, expected):
     ),
 )
 def test_get_request_search(ts_range, request_ids, expected):
-    search = get_request_search(None, 'index', ts_range, request_ids)
+    search = get_request_search(None, 'index', ts_range, request_ids, timestamp_field='@timestamp')
 
     assert search.to_dict() == expected
 
 
 @pytest.mark.parametrize(
-    'expected',
+    'timestamp_field,expected',
     (
-        {
-            'aggs': {
-                'index': {
-                    'terms': {'field': '_index'},
-                    'aggs': {
-                        'min_ts': {'min': {'field': '@timestamp'}},
-                        'max_ts': {'max': {'field': '@timestamp'}},
+        (
+            '@timestamp',
+            {
+                'aggs': {
+                    'index': {
+                        'terms': {'field': '_index'},
+                        'aggs': {
+                            'min_ts': {'min': {'field': '@timestamp'}},
+                            'max_ts': {'max': {'field': '@timestamp'}},
+                        },
                     },
                 },
+                'from': 0,
+                'size': 0,
             },
-            'from': 0,
-            'size': 0,
-        },
+        ),
+        (
+            'timestamp',
+            {
+                'aggs': {
+                    'index': {
+                        'terms': {'field': '_index'},
+                        'aggs': {
+                            'min_ts': {'min': {'field': 'timestamp'}},
+                            'max_ts': {'max': {'field': 'timestamp'}},
+                        },
+                    },
+                },
+                'from': 0,
+                'size': 0,
+            },
+        ),
     ),
 )
-def test_get_indicies_aggregation(expected):
-    search = get_indicies_aggregation(None, [])
+def test_get_indices_aggregation(timestamp_field, expected):
+    search = get_indices_aggregation(None, [], timestamp_field=timestamp_field)
 
     assert search.to_dict() == expected
