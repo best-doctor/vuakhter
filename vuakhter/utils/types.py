@@ -1,10 +1,17 @@
 from __future__ import annotations
 import datetime
 import typing
+import sys
 
 from elasticsearch_dsl import Search
 
 from vuakhter.utils.helpers import timestamp
+
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
+
 
 DateOrDatetime = typing.Union[datetime.date, datetime.datetime]
 
@@ -67,3 +74,11 @@ AnyIterator = typing.Iterator[typing.Any]
 AnyIterable = typing.Iterable[typing.Any]
 
 SearchFactory = typing.Callable[[str], Search]
+
+GeneratorFunction = typing.Callable[[AnyIterable, typing.Optional[str]], AnyIterator]
+FilterFunction = typing.Callable
+
+
+class EntriesGeneratorFunctions(TypedDict):
+    generator_function: GeneratorFunction
+    filter_function: FilterFunction

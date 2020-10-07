@@ -67,11 +67,14 @@ def setup_logging(level: str = 'ERROR', formatter: str = 'simple') -> None:
 
 
 def is_valid(entry: RequestEntry) -> bool:
-    try:
-        body = json.loads(entry.json)
-    except ValueError:
-        return False
-    if entry.status_code == 200 and not (set(body.keys()) - {'data', 'meta', 'request'}):
+    if isinstance(entry.json, dict):
+        body = entry.json
+    else:
+        try:
+            body = json.loads(entry.json)
+        except ValueError:
+            return False
+    if entry.status_code in {200, 201, 204} and not (set(body.keys()) - {'data', 'meta', 'request'}):
         return True
     elif not (set(body.keys()) - {'message', 'errors'}):
         return True

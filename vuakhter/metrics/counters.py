@@ -120,6 +120,8 @@ class SchemaValidatorCounter(StatisticsMetrics):
         self.check_ids = []
 
     def process_entry(self, entry: AccessEntry) -> None:
+        if entry.method == 'OPTIONS':
+            return
         if not self.min_ts or entry.ts < self.min_ts:
             self.min_ts = entry.ts
         if not self.max_ts or entry.ts > self.max_ts:

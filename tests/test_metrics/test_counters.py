@@ -71,5 +71,5 @@ def test_slow_log_counter_mangle(slow_log_counter, top, mangle, expected_top, ex
 
 
 def test_schema_validator_counter(schema_validator_counter):
-    assert schema_validator_counter.statistics == {'invalid': 0, 'missed': 11, 'valid': 0}
-    assert schema_validator_counter.report() == 'Valid requests 0.00% (0 out of 0, 11 missed)'
+    assert schema_validator_counter.statistics == {'invalid': 0, 'missed': 10, 'valid': 0}
+    assert schema_validator_counter.report() == 'Valid requests 0.00% (0 out of 0, 10 missed)'

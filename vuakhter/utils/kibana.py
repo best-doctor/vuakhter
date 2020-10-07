@@ -85,12 +85,13 @@ def get_access_search(
     return search
 
 
-def gen_access_entries(hits: AnyIterable) -> AccessEntryIterator:
+def gen_access_entries(hits: AnyIterable, timestamp_field: str = None) -> AccessEntryIterator:
+    timestamp_field = timestamp_field or 'timestamp'
     for hit in hits:
         hit_dict = hit.to_dict()
         try:
             yield AccessEntry(
-                ts=get_timestamp(deep_get(hit_dict, '@timestamp')),
+                ts=get_timestamp(deep_get(hit_dict, timestamp_field)),
                 url=deep_get(hit_dict, 'url.original'),
                 method=deep_get(hit_dict, 'http.request.method'),
                 status_code=int(deep_get(hit_dict, 'http.response.status_code')),
@@ -99,7 +100,7 @@ def gen_access_entries(hits: AnyIterable) -> AccessEntryIterator:
             )
         except (KeyError, ValueError, TypeError):
             fail_dict = {
-                'ts': deep_get(hit_dict, '@timestamp'),
+                'ts': deep_get(hit_dict, timestamp_field),
                 'url': deep_get(hit_dict, 'url.original'),
                 'method': deep_get(hit_dict, 'http.request.method'),
                 'status_code': deep_get(hit_dict, 'http.response.status_code'),
@@ -134,19 +135,20 @@ def get_request_search(
     return search
 
 
-def gen_request_entries(hits: AnyIterable) -> RequestEntryIterator:
+def gen_request_entries(hits: AnyIterable, timestamp_field: str = None) -> RequestEntryIterator:
+    timestamp_field = timestamp_field or 'timestamp'
     for hit in hits:
         hit_dict = hit.to_dict()
         try:
             yield RequestEntry(
-                ts=get_timestamp(deep_get(hit_dict, '@timestamp')),
+                ts=get_timestamp(deep_get(hit_dict, timestamp_field)),
                 json=deep_get(hit_dict, 'response.json'),
                 request_id=deep_get(hit_dict, 'response.request_id'),
                 status_code=int(deep_get(hit_dict, 'response.status')),
             )
         except (KeyError, ValueError, TypeError):
             fail_dict = {
-                'ts': deep_get(hit_dict, '@timestamp'),
+                'ts': deep_get(hit_dict, timestamp_field),
                 'json': deep_get(hit_dict, 'response.json'),
                 'request_id': deep_get(hit_dict, 'response.request_id'),
                 'status_code': deep_get(hit_dict, 'response.status'),
