@@ -1,7 +1,7 @@
 elasticsearch>=7.0.0,<8.0.0
 elasticsearch-dsl>=7.0.0,<8.0.0
 
-pytest==5.4.1
+pytest==9.0.3
 pytest-cov==2.8.1
 pytest-mock==3.1.0
 pydocstyle==5.0.2
